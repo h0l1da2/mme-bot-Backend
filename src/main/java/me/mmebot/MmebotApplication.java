@@ -20,7 +20,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
         ExternalServiceProperties.class,
         JwtProperties.class,
         EncryptionKeyProperties.class,
-//        GoogleProperties.class,
+        GoogleProperties.class,
         ChatPersistenceQueueProperties.class,
         MaskingProperties.class
         , OpenAIProperties.class
