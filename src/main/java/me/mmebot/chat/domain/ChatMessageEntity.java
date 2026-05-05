@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import me.mmebot.chat.infrastructure.persistence.ChatSessionEntity;
 import me.mmebot.core.domain.EncryptionContextEntity;
 import me.mmebot.openai.dto.ChatMessageRole;
 import org.hibernate.annotations.CreationTimestamp;

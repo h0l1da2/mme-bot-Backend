@@ -9,6 +9,8 @@ import me.mmebot.chat.api.dto.ChatMsgRes.ChatStreamPayload;
 import me.mmebot.chat.api.dto.ChatMsgRes.CreateChatMsgRes;
 import me.mmebot.chat.api.dto.ChatMsgRes.StartChatInitRes;
 import me.mmebot.chat.api.dto.ChatMsgRes.StartChatRes;
+import me.mmebot.chat.application.port.in.command.CreateChatSessionCommand;
+import me.mmebot.chat.application.port.in.result.CreateChatSessionResult;
 import me.mmebot.chat.service.ChatService;
 import me.mmebot.stream.StreamContextStore;
 import org.springframework.http.MediaType;
@@ -36,8 +38,13 @@ public class ChatController {
     private final StreamContextStore streamContextStore;
 
     @PostMapping("/chatSession")
-    public CreateChatSessionRes createChatSession(@RequestBody @Valid CreateChatSessionReq req) {
-        return chatService.createChatSession(req);
+    public CreateChatSessionRes createChatSession(@AuthenticationPrincipal Long userId,
+                                                  @RequestBody @Valid CreateChatSessionReq req) {
+        CreateChatSessionResult result = chatService.createChatSession(new CreateChatSessionCommand(
+                userId,
+                req.diaryId()
+        ));
+        return new CreateChatSessionRes(result.chatSessionId());
     }
 
     @PostMapping("/{chatSessionId}/messages/start")

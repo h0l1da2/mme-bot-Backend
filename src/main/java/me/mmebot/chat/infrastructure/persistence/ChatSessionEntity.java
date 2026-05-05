@@ -1,7 +1,18 @@
-package me.mmebot.chat.domain;
+package me.mmebot.chat.infrastructure.persistence;
 
-import jakarta.persistence.*;
-import me.mmebot.common.persistence.DatabaseNames;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
 import java.time.OffsetDateTime;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -9,6 +20,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import me.mmebot.bot.domain.BotEntity;
+import me.mmebot.chat.domain.ChatSessionStatus;
+import me.mmebot.common.persistence.DatabaseNames;
 import me.mmebot.core.domain.EncryptionContextEntity;
 import me.mmebot.diary.domain.DiaryEntity;
 import org.hibernate.annotations.CreationTimestamp;
@@ -43,7 +56,6 @@ public class ChatSessionEntity {
     @Column(name = "send_count", nullable = false)
     private int sendCount;
 
-    // 대화 끝난 후, 대화 요약
     @Column(columnDefinition = "TEXT")
     private String summary;
 
@@ -57,4 +69,5 @@ public class ChatSessionEntity {
 
     @Column(name = "completed_at")
     private OffsetDateTime completedAt;
+
 }

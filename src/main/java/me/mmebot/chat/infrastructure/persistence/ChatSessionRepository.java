@@ -1,7 +1,6 @@
-package me.mmebot.chat.repository;
+package me.mmebot.chat.infrastructure.persistence;
 
 import java.util.Optional;
-import me.mmebot.chat.domain.ChatSessionEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -24,5 +23,4 @@ join fetch d.user
 where cs.id = :id
 """)
     Optional<ChatSessionEntity> findWithDiaryAndUser(Long id);
-
 }

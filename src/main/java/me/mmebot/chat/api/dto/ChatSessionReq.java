@@ -5,8 +5,6 @@ import jakarta.validation.constraints.NotNull;
 public final class ChatSessionReq {
     public record CreateChatSessionReq(
             @NotNull
-            Long userId,
-            @NotNull
             Long diaryId
     ) {}
 }

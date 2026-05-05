@@ -5,17 +5,20 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import me.mmebot.bot.domain.BotEntity;
+import me.mmebot.chat.application.port.in.command.CreateChatSessionCommand;
+import me.mmebot.chat.application.port.in.result.CreateChatSessionResult;
+import me.mmebot.chat.application.port.out.persistence.ChatSessionPersistencePort;
 import me.mmebot.chat.domain.ChatMessage;
 import me.mmebot.chat.domain.ChatMessageEntity;
 import me.mmebot.chat.domain.ChatMessages;
-import me.mmebot.chat.domain.ChatSessionEntity;
-import me.mmebot.chat.domain.ChatSessionStatus;
+import me.mmebot.chat.domain.ChatSession;
 import me.mmebot.chat.domain.ChatStatus;
 import me.mmebot.chat.exception.ChatException;
+import me.mmebot.chat.infrastructure.persistence.ChatSessionEntity;
+import me.mmebot.chat.infrastructure.persistence.ChatSessionRepository;
 import me.mmebot.chat.mapper.ChatMessageResponseMapper;
 import me.mmebot.chat.queue.ChatPersistenceQueueService;
 import me.mmebot.chat.repository.ChatMessageRepository;
-import me.mmebot.chat.repository.ChatSessionRepository;
 import me.mmebot.common.crypto.AesGcmCryptoService;
 import me.mmebot.core.domain.EncryptionContextEntity;
 import me.mmebot.core.service.EncryptionContextFactory;
@@ -40,8 +43,6 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static me.mmebot.chat.api.dto.ChatMsgReq.*;
 import static me.mmebot.chat.api.dto.ChatMsgRes.*;
-import static me.mmebot.chat.api.dto.ChatSessionReq.*;
-import static me.mmebot.chat.api.dto.ChatSessionRes.*;
 import static me.mmebot.stream.StreamContextContent.*;
 
 @Slf4j
@@ -61,12 +62,14 @@ public class ChatService {
     private final ObjectMapper objectMapper;
     private final TemplateService templateService;
     private final ChatMessageResponseMapper chatMessageResponseMapper;
+    private final ChatSessionPersistencePort chatSessionPersistencePort;
 
-    public CreateChatSessionRes createChatSession(CreateChatSessionReq req) {
-        DiaryEntity diaryEntity = diaryService.getActiveDiary(req.diaryId());
+    @Transactional(rollbackFor = Exception.class)
+    public CreateChatSessionResult createChatSession(CreateChatSessionCommand command) {
+        DiaryEntity diaryEntity = diaryService.getActiveDiary(command.diaryId());
         Diary diary = diaryEntity.toModel();
-        if (!diary.isOwnedBy(req.userId())) {
-            throw ChatException.diaryOwnerMismatch(diary.getId(), req.userId(), diary.getUserId());
+        if (!diary.isOwnedBy(command.userId())) {
+            throw ChatException.diaryOwnerMismatch(diary.getId(), command.userId(), diary.getUserId());
         }
         UserEntity user = diaryEntity.getUser();
 
@@ -88,16 +91,16 @@ public class ChatService {
 
         EncryptionContextEntity context = encryptionContextFactory.createContext(user.getId().toString());
 
-        ChatSessionEntity chatSession = ChatSessionEntity.builder()
-                .diary(diaryEntity)
-                .bot(user.getBot())
-                .status(ChatSessionStatus.ACTIVE)
-                .encryptionContext(context)
-                .build();
+        ChatSession chatSession = ChatSession.create(
+                diary.getId(),
+                user.getId(),
+                user.getBot().getId(),
+                context.getId()
+        );
 
-        saveChatSession(chatSession);
+        ChatSession savedChatSession = chatSessionPersistencePort.save(chatSession);
 
-        return new CreateChatSessionRes(chatSession.getId());
+        return new CreateChatSessionResult(savedChatSession.getId());
     }
 
     protected Optional<ChatSessionEntity> getChatSessionWithDiaryAndUserById(Long chatSessionId) {
@@ -106,10 +109,6 @@ public class ChatService {
 
     private Optional<ChatMessageEntity> getChatMsg(Long chatMessageId) {
         return chatMsgRepository.findById(chatMessageId);
-    }
-
-    protected void saveChatSession(ChatSessionEntity chatSession) {
-        chatSessionRepository.save(chatSession);
     }
 
     private Optional<ChatSessionEntity> getChatSessionByDiaryId(Long diaryId) {
