@@ -32,31 +32,4 @@ public class ChatSession {
                 .encryptionContextId(encryptionContextId)
                 .build();
     }
-
-    public boolean isOwnedBy(Long userId) {
-        return this.userId != null && this.userId.equals(userId);
-    }
-
-    public boolean isActive() {
-        return status == ChatSessionStatus.ACTIVE;
-    }
-
-    public boolean isCompleted() {
-        return status == ChatSessionStatus.COMPLETED;
-    }
-
-    public ChatSession complete(String summary, OffsetDateTime completedAt) {
-        return ChatSession.builder()
-                .id(this.id)
-                .diaryId(this.diaryId)
-                .userId(this.userId)
-                .botId(this.botId)
-                .status(ChatSessionStatus.COMPLETED)
-                .sendCount(this.sendCount)
-                .summary(summary)
-                .encryptionContextId(this.encryptionContextId)
-                .createdAt(this.createdAt)
-                .completedAt(completedAt)
-                .build();
-    }
 }
